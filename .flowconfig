@@ -1,0 +1,13 @@
+[ignore]
+.*/node_modules/.*
+<PROJECT_ROOT>/out/.*
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]
