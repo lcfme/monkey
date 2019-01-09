@@ -3,11 +3,11 @@
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
-	else if(typeof exports === 'object')
-		exports["Monkey"] = factory();
-	else
-		root["Monkey"] = factory();
-})(window, function() {
+	else {
+		var a = factory();
+		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
+	}
+})(this || window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -103,12 +103,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Monkey = __webpack_require__(/*! ../src/lexer */ "./src/lexer.js");
-
-module.exports = Monkey.default;
-
+const monkey = __webpack_require__(/*! ../src/monkey */ "./src/monkey.js");
+module.exports = monkey;
 exports = module.exports;
-
 exports.default = module.exports;
 
 
@@ -158,9 +155,18 @@ var Lexer = exports.Lexer = function () {
       if (this.readPosition >= this.input.length) {
         this.ch = undefined;
       } else {
-        this.ch = this.input[this.readPosition++];
+        this.ch = this.input[this.readPosition];
       }
       this.position = this.readPosition;
+      this.readPosition += 1;
+    }
+  }, {
+    key: 'peekChar',
+    value: function peekChar() {
+      if (this.readPosition >= this.input.length) {
+        return undefined;
+      }
+      return this.input[this.readPosition];
     }
   }, {
     key: 'nextToken',
@@ -170,7 +176,14 @@ var Lexer = exports.Lexer = function () {
 
       switch (this.ch) {
         case '=':
-          tok = (0, _token.generateToken)(_token.ASSIGN, this.ch);
+          if (this.peekChar() === '=') {
+            var ch = this.ch;
+            this.readChar();
+            var literial = ch + this.ch;
+            tok = (0, _token.generateToken)(_token.EQ, literial);
+          } else {
+            tok = (0, _token.generateToken)(_token.ASSIGN, this.ch);
+          }
           break;
         case ';':
           tok = (0, _token.generateToken)(_token.SEMICOLON, this.ch);
@@ -193,15 +206,43 @@ var Lexer = exports.Lexer = function () {
         case '}':
           tok = (0, _token.generateToken)(_token.RBRACE, this.ch);
           break;
+        case '-':
+          tok = (0, _token.generateToken)(_token.MINUS, this.ch);
+          break;
+        case '!':
+          if (this.peekChar() === '=') {
+            var _ch = this.ch;
+            this.readChar();
+            var _literial = _ch + this.ch;
+            tok = (0, _token.generateToken)(_token.NOT_EQ, _literial);
+          } else {
+            tok = (0, _token.generateToken)(_token.BANG, this.ch);
+          }
+          break;
+        case '/':
+          tok = (0, _token.generateToken)(_token.SLASH, this.ch);
+          break;
+        case '*':
+          tok = (0, _token.generateToken)(_token.ASTERISK, this.ch);
+          break;
+        case '<':
+          tok = (0, _token.generateToken)(_token.LT, this.ch);
+          break;
+        case '>':
+          tok = (0, _token.generateToken)(_token.GT, this.ch);
+          break;
         case undefined:
           tok = (0, _token.generateToken)(_token.EOF);
           break;
         default:
           if (isLiterial(this.ch)) {
-            var literial = this.readIdentifier();
-            tok = (0, _token.generateToken)((0, _token.lookupIdent)(literial), literial);
+            var _literial2 = this.readIdentifier();
+            tok = (0, _token.generateToken)((0, _token.lookupIdent)(_literial2), _literial2);
             return tok;
-          } else if (isDigit(this.ch)) {} else {
+          } else if (isDigit(this.ch)) {
+            tok = (0, _token.generateToken)(_token.INT, this.readNumber());
+            return tok;
+          } else {
             tok = (0, _token.generateToken)(_token.ILLEGAL, this.ch);
           }
       }
@@ -237,6 +278,57 @@ var Lexer = exports.Lexer = function () {
 
   return Lexer;
 }();
+
+/***/ }),
+
+/***/ "./src/monkey.js":
+/*!***********************!*\
+  !*** ./src/monkey.js ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TokenTypes = exports.Lexer = undefined;
+
+var _lexer = __webpack_require__(/*! ./lexer */ "./src/lexer.js");
+
+Object.defineProperty(exports, 'Lexer', {
+  enumerable: true,
+  get: function get() {
+    return _lexer.Lexer;
+  }
+});
+
+var _token = __webpack_require__(/*! ./token */ "./src/token.js");
+
+var TokenTypes = exports.TokenTypes = {
+  ASSIGN: _token.ASSIGN,
+  SEMICOLON: _token.SEMICOLON,
+  LPAREN: _token.LPAREN,
+  RPAREN: _token.RPAREN,
+  COMMA: _token.COMMA,
+  PLUS: _token.PLUS,
+  LBRACE: _token.LBRACE,
+  RBRACE: _token.RBRACE,
+  EOF: _token.EOF,
+  IDENT: _token.IDENT,
+  ILLEGAL: _token.ILLEGAL,
+  INT: _token.INT,
+  MINUS: _token.MINUS,
+  BANG: _token.BANG,
+  SLASH: _token.SLASH,
+  ASTERISK: _token.ASTERISK,
+  LT: _token.LT,
+  GT: _token.GT,
+  EQ: _token.EQ,
+  NOT_EQ: _token.NOT_EQ
+};
 
 /***/ }),
 
@@ -276,10 +368,28 @@ var LBRACE = exports.LBRACE = '{';
 var RBRACE = exports.RBRACE = '}';
 var FUNC = exports.FUNC = 'function';
 var LET = exports.LET = 'let';
+var MINUS = exports.MINUS = '-';
+var BANG = exports.BANG = '!';
+var ASTERISK = exports.ASTERISK = '*';
+var SLASH = exports.SLASH = '/';
+var LT = exports.LT = '<';
+var GT = exports.GT = '>';
+var TRUE = exports.TRUE = 'true';
+var FALSE = exports.FALSE = 'false';
+var IF = exports.IF = 'if';
+var ELSE = exports.ELSE = 'else';
+var RETURN = exports.RETURN = 'return';
+var EQ = exports.EQ = '==';
+var NOT_EQ = exports.NOT_EQ = '!=';
 
 var keywords = exports.keywords = {
   fn: FUNC,
-  let: LET
+  let: LET,
+  true: TRUE,
+  false: FALSE,
+  if: IF,
+  else: ELSE,
+  return: RETURN
 };
 
 function lookupIdent(ident) {

@@ -8,8 +8,8 @@ module.exports = env => {
     mode: env && env.production ? 'production' : 'development',
     output: {
       filename: 'monkey.js',
-      library: 'Monkey',
       libraryTarget: 'umd',
+      globalObject: 'this || window',
       path: resolve('out')
     },
     devtool: 'source-map',

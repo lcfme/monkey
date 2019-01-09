@@ -14,7 +14,15 @@ import {
   IDENT,
   ILLEGAL,
   lookupIdent,
-  INT
+  INT,
+  MINUS,
+  BANG,
+  SLASH,
+  ASTERISK,
+  LT,
+  GT,
+  EQ,
+  NOT_EQ
 } from './token';
 import type { Token } from './token';
 
@@ -40,9 +48,16 @@ export class Lexer {
     if (this.readPosition >= this.input.length) {
       this.ch = undefined;
     } else {
-      this.ch = this.input[this.readPosition++];
+      this.ch = this.input[this.readPosition];
     }
     this.position = this.readPosition;
+    this.readPosition += 1;
+  }
+  peekChar(): string | void {
+    if (this.readPosition >= this.input.length) {
+      return undefined;
+    }
+    return this.input[this.readPosition];
   }
   nextToken(): Token {
     let tok: Token;
@@ -50,7 +65,14 @@ export class Lexer {
 
     switch (this.ch) {
       case '=':
-        tok = generateToken(ASSIGN, this.ch);
+        if (this.peekChar() === '=') {
+          const ch = this.ch;
+          this.readChar();
+          const literial = ((ch: any): string) + ((this.ch: any): string);
+          tok = generateToken(EQ, literial);
+        } else {
+          tok = generateToken(ASSIGN, this.ch);
+        }
         break;
       case ';':
         tok = generateToken(SEMICOLON, this.ch);
@@ -72,6 +94,31 @@ export class Lexer {
         break;
       case '}':
         tok = generateToken(RBRACE, this.ch);
+        break;
+      case '-':
+        tok = generateToken(MINUS, this.ch);
+        break;
+      case '!':
+        if (this.peekChar() === '=') {
+          const ch = this.ch;
+          this.readChar();
+          const literial = ((ch: any): string) + ((this.ch: any): string);
+          tok = generateToken(NOT_EQ, literial);
+        } else {
+          tok = generateToken(BANG, this.ch);
+        }
+        break;
+      case '/':
+        tok = generateToken(SLASH, this.ch);
+        break;
+      case '*':
+        tok = generateToken(ASTERISK, this.ch);
+        break;
+      case '<':
+        tok = generateToken(LT, this.ch);
+        break;
+      case '>':
+        tok = generateToken(GT, this.ch);
         break;
       case undefined:
         tok = generateToken(EOF);

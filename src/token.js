@@ -27,10 +27,29 @@ export const LBRACE = '{';
 export const RBRACE = '}';
 export const FUNC = 'function';
 export const LET = 'let';
+export const MINUS = '-';
+export const BANG = '!';
+export const ASTERISK = '*';
+export const SLASH = '/';
+export const LT = '<';
+export const GT = '>';
+export const TRUE = 'true';
+export const FALSE = 'false';
+export const IF = 'if';
+export const ELSE = 'else';
+export const RETURN = 'return';
+export const EQ = '==';
+export const NOT_EQ = '!=';
+
 
 export const keywords = {
   fn: FUNC,
-  let: LET
+  let: LET,
+  true: TRUE,
+  false: FALSE,
+  if: IF,
+  else: ELSE,
+  return: RETURN
 };
 
 export function lookupIdent(ident: string) {

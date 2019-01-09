@@ -1,9 +1,12 @@
 {
-  "name": "util-computed",
+  "name": "monkey",
   "author": {
     "name": "laearon"
   },
-  "main": "out/computed.js",
+  "main": "out/monkey.js",
+  "bin": {
+    "mlexer": "bin/lexer.js"
+  },
   "scripts": {
     "build": "rm -rf out && webpack --progress"
   },
@@ -14,8 +17,8 @@
     "babel-preset-flow": "^6.23.0",
     "babel-preset-stage-2": "^6.24.1",
     "flow-bin": "^0.89.0",
-    "webpack": "^4.28.0",
-    "webpack-cli": "^3.1.2"
+    "webpack": "^4.28.1",
+    "webpack-cli": "^3.2.1"
   },
   "license": "MIT"
 }
