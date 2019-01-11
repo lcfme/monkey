@@ -38,7 +38,7 @@ export class Lexer {
   input: string;
   position: number;
   readPosition: number;
-  ch: string | void;
+  ch: ?string;
   constructor(input: string) {
     this.input = input || '';
     this.position = this.readPosition = 0;
@@ -46,16 +46,16 @@ export class Lexer {
   }
   readChar() {
     if (this.readPosition >= this.input.length) {
-      this.ch = undefined;
+      this.ch = null;
     } else {
       this.ch = this.input[this.readPosition];
     }
     this.position = this.readPosition;
     this.readPosition += 1;
   }
-  peekChar(): string | void {
+  peekChar(): ?string {
     if (this.readPosition >= this.input.length) {
-      return undefined;
+      return null;
     }
     return this.input[this.readPosition];
   }
@@ -120,7 +120,7 @@ export class Lexer {
       case '>':
         tok = generateToken(GT, this.ch);
         break;
-      case undefined:
+      case null:
         tok = generateToken(EOF);
         break;
       default:

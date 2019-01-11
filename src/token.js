@@ -3,10 +3,10 @@ export type TokenType = string;
 
 export interface Token {
   Type: TokenType;
-  Literial: string | void;
+  Literial: ?string;
 }
 
-export function generateToken(tokenType: TokenType, literial?: string): Token {
+export function generateToken(tokenType: TokenType, literial: ?string): Token {
   return {
     Type: tokenType,
     Literial: literial
@@ -40,7 +40,6 @@ export const ELSE = 'else';
 export const RETURN = 'return';
 export const EQ = '==';
 export const NOT_EQ = '!=';
-
 
 export const keywords = {
   fn: FUNC,
