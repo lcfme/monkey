@@ -1,12 +1,16 @@
 // @flow
+
 export type TokenType = string;
 
 export interface Token {
   Type: TokenType;
-  Literial: ?string;
+  Literial: string;
 }
 
-export function generateToken(tokenType: TokenType, literial: ?string): Token {
+export function generateToken(
+  tokenType: TokenType,
+  literial: string = ''
+): Token {
   return {
     Type: tokenType,
     Literial: literial

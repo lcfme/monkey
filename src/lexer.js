@@ -71,7 +71,7 @@ export class Lexer {
           const literial = ((ch: any): string) + ((this.ch: any): string);
           tok = generateToken(EQ, literial);
         } else {
-          tok = generateToken(ASSIGN, this.ch);
+          tok = generateToken(ASSIGN, ((this.ch: any): string));
         }
         break;
       case ';':
@@ -105,7 +105,7 @@ export class Lexer {
           const literial = ((ch: any): string) + ((this.ch: any): string);
           tok = generateToken(NOT_EQ, literial);
         } else {
-          tok = generateToken(BANG, this.ch);
+          tok = generateToken(BANG, ((this.ch: any): string));
         }
         break;
       case '/':
