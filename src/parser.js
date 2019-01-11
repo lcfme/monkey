@@ -4,11 +4,13 @@ import * as lexer from './lexer';
 import * as ast from './ast';
 import * as token from './token';
 
-class Parser {
+export class Parser {
   l: lexer.Lexer;
   curToken: token.Token;
   peekToken: token.Token;
+  errors: Array<string>;
   constructor(l: lexer.Lexer) {
+    this.errors = [];
     this.l = l;
     this.nextToken();
     this.nextToken();
@@ -19,6 +21,7 @@ class Parser {
   }
   parseProgram(): ast.Program {
     const program = new ast.Program();
+    debugger;
     while (this.curToken.Type !== token.EOF) {
       const stmt = this.parseStatememt();
       if (stmt) {
@@ -36,10 +39,23 @@ class Parser {
         return null;
     }
   }
-  parseLetStatement(): ast.LetStatement {
+  parseLetStatement(): ?ast.LetStatement {
     const stmt = new ast.LetStatement();
     stmt.token = this.curToken;
     if (!this.expectPeek(token.IDENT)) {
+      return;
+    }
+    stmt.name = new ast.Identifier(this.curToken, this.curToken.Literial);
+    if (!this.expectPeek(token.ASSIGN)) {
+      return;
+    }
+    // @TODO
+debugger;
+    while (
+      this.curToken.Type !== token.EOF &&
+      !this.curTokenIs(token.SEMICOLON)
+    ) {
+      this.nextToken();
     }
     return stmt;
   }
@@ -48,10 +64,20 @@ class Parser {
       this.nextToken();
       return true;
     } else {
+      this.peekError(t);
       return false;
     }
   }
+
+  peekError(t: token.TokenType) {
+    this.errors.push(
+      `expected next token to be ${t} but got ${this.peekToken.Type}`
+    );
+  }
   peekTokenIs(t: token.TokenType): boolean {
     return this.peekToken.Type === t;
+  }
+  curTokenIs(t: token.TokenType): boolean {
+    return this.curToken.Type === t;
   }
 }

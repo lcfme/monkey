@@ -27,11 +27,11 @@ import {
 import type { Token } from './token';
 
 function isLiterial(ch: any): boolean {
-  return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
+  return ch && (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z'));
 }
 
 function isDigit(ch: any): boolean {
-  return '0' <= ch && ch <= '9';
+  return ch && ('0' <= ch && ch <= '9');
 }
 
 export class Lexer {

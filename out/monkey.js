@@ -3,10 +3,10 @@
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
-	else {
-		var a = factory();
-		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
-	}
+	else if(typeof exports === 'object')
+		exports["monkey"] = factory();
+	else
+		root["monkey"] = factory();
 })(this || window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -111,6 +111,86 @@ exports.default = module.exports;
 
 /***/ }),
 
+/***/ "./src/ast.js":
+/*!********************!*\
+  !*** ./src/ast.js ***!
+  \********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Program = exports.Program = function () {
+  function Program() {
+    _classCallCheck(this, Program);
+
+    this.statements = [];
+  }
+
+  _createClass(Program, [{
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      if (this.statements.length) {
+        return this.statements[0].tokenLiterial();
+      } else {
+        return '';
+      }
+    }
+  }]);
+
+  return Program;
+}();
+
+var LetStatement = exports.LetStatement = function () {
+  function LetStatement() {
+    _classCallCheck(this, LetStatement);
+  }
+
+  _createClass(LetStatement, [{
+    key: 'statementNode',
+    value: function statementNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }]);
+
+  return LetStatement;
+}();
+
+var Identifier = exports.Identifier = function () {
+  function Identifier(token, value) {
+    _classCallCheck(this, Identifier);
+
+    this.token = token;
+    this.value = value;
+  }
+
+  _createClass(Identifier, [{
+    key: 'expressionNode',
+    value: function expressionNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }]);
+
+  return Identifier;
+}();
+
+/***/ }),
+
 /***/ "./src/lexer.js":
 /*!**********************!*\
   !*** ./src/lexer.js ***!
@@ -133,11 +213,11 @@ var _token = __webpack_require__(/*! ./token */ "./src/token.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function isLiterial(ch) {
-  return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z';
+  return ch && ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z');
 }
 
 function isDigit(ch) {
-  return '0' <= ch && ch <= '9';
+  return ch && '0' <= ch && ch <= '9';
 }
 
 var Lexer = exports.Lexer = function () {
@@ -153,7 +233,7 @@ var Lexer = exports.Lexer = function () {
     key: 'readChar',
     value: function readChar() {
       if (this.readPosition >= this.input.length) {
-        this.ch = undefined;
+        this.ch = null;
       } else {
         this.ch = this.input[this.readPosition];
       }
@@ -164,7 +244,7 @@ var Lexer = exports.Lexer = function () {
     key: 'peekChar',
     value: function peekChar() {
       if (this.readPosition >= this.input.length) {
-        return undefined;
+        return null;
       }
       return this.input[this.readPosition];
     }
@@ -231,7 +311,7 @@ var Lexer = exports.Lexer = function () {
         case '>':
           tok = (0, _token.generateToken)(_token.GT, this.ch);
           break;
-        case undefined:
+        case null:
           tok = (0, _token.generateToken)(_token.EOF);
           break;
         default:
@@ -294,7 +374,7 @@ var Lexer = exports.Lexer = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.TokenTypes = exports.Lexer = undefined;
+exports.Parser = exports.TokenTypes = exports.Lexer = undefined;
 
 var _lexer = __webpack_require__(/*! ./lexer */ "./src/lexer.js");
 
@@ -302,6 +382,15 @@ Object.defineProperty(exports, 'Lexer', {
   enumerable: true,
   get: function get() {
     return _lexer.Lexer;
+  }
+});
+
+var _parser = __webpack_require__(/*! ./parser */ "./src/parser.js");
+
+Object.defineProperty(exports, 'Parser', {
+  enumerable: true,
+  get: function get() {
+    return _parser.Parser;
   }
 });
 
@@ -329,6 +418,131 @@ var TokenTypes = exports.TokenTypes = {
   EQ: _token.EQ,
   NOT_EQ: _token.NOT_EQ
 };
+
+/***/ }),
+
+/***/ "./src/parser.js":
+/*!***********************!*\
+  !*** ./src/parser.js ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Parser = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _lexer = __webpack_require__(/*! ./lexer */ "./src/lexer.js");
+
+var lexer = _interopRequireWildcard(_lexer);
+
+var _ast = __webpack_require__(/*! ./ast */ "./src/ast.js");
+
+var ast = _interopRequireWildcard(_ast);
+
+var _token = __webpack_require__(/*! ./token */ "./src/token.js");
+
+var token = _interopRequireWildcard(_token);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Parser = exports.Parser = function () {
+  function Parser(l) {
+    _classCallCheck(this, Parser);
+
+    this.errors = [];
+    this.l = l;
+    this.nextToken();
+    this.nextToken();
+  }
+
+  _createClass(Parser, [{
+    key: 'nextToken',
+    value: function nextToken() {
+      this.curToken = this.peekToken;
+      this.peekToken = this.l.nextToken();
+    }
+  }, {
+    key: 'parseProgram',
+    value: function parseProgram() {
+      var program = new ast.Program();
+      debugger;
+      while (this.curToken.Type !== token.EOF) {
+        var stmt = this.parseStatememt();
+        if (stmt) {
+          program.statements.push(stmt);
+        }
+        this.nextToken();
+      }
+      return program;
+    }
+  }, {
+    key: 'parseStatememt',
+    value: function parseStatememt() {
+      switch (this.curToken.Type) {
+        case token.LET:
+          return this.parseLetStatement();
+        default:
+          return null;
+      }
+    }
+  }, {
+    key: 'parseLetStatement',
+    value: function parseLetStatement() {
+      var stmt = new ast.LetStatement();
+      stmt.token = this.curToken;
+      if (!this.expectPeek(token.IDENT)) {
+        return;
+      }
+      stmt.name = new ast.Identifier(this.curToken, this.curToken.Literial);
+      if (!this.expectPeek(token.ASSIGN)) {
+        return;
+      }
+      // @TODO
+      debugger;
+      while (this.curToken.Type !== token.EOF && !this.curTokenIs(token.SEMICOLON)) {
+        this.nextToken();
+      }
+      return stmt;
+    }
+  }, {
+    key: 'expectPeek',
+    value: function expectPeek(t) {
+      if (this.peekTokenIs(t)) {
+        this.nextToken();
+        return true;
+      } else {
+        this.peekError(t);
+        return false;
+      }
+    }
+  }, {
+    key: 'peekError',
+    value: function peekError(t) {
+      this.errors.push('expected next token to be ' + t + ' but got ' + this.peekToken.Type);
+    }
+  }, {
+    key: 'peekTokenIs',
+    value: function peekTokenIs(t) {
+      return this.peekToken.Type === t;
+    }
+  }, {
+    key: 'curTokenIs',
+    value: function curTokenIs(t) {
+      return this.curToken.Type === t;
+    }
+  }]);
+
+  return Parser;
+}();
 
 /***/ }),
 

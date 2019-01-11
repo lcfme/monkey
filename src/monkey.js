@@ -45,3 +45,5 @@ export const TokenTypes = {
   EQ,
   NOT_EQ
 };
+
+export { Parser } from './parser';

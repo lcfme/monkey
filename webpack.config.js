@@ -9,6 +9,7 @@ module.exports = env => {
     output: {
       filename: 'monkey.js',
       libraryTarget: 'umd',
+      library: 'monkey',
       globalObject: 'this || window',
       path: resolve('out')
     },

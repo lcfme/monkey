@@ -40,8 +40,11 @@ export class LetStatement implements Statement {
 
 export class Identifier implements Expression {
   token: Token;
-  value: string;
-  constructor() {}
+  value: ?string;
+  constructor(token: Token, value: ?string) {
+    this.token = token;
+    this.value = value;
+  }
   expressionNode() {}
   tokenLiterial(): string {
     return ((this.token.Literial: any): string);
