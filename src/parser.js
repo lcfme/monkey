@@ -41,7 +41,6 @@ export class Parser {
     this.registerPrefix(token.IDENT, this.parseIdentifier);
     this.registerPrefix(token.INT, this.parseIntegerLiteral);
     this.registerPrefix(token.BANG, this.parsePrefixExpression);
-    this.registerPrefix(token.MINUS, this.parsePrefixExpression);
     this.registerInfix(token.PLUS, this.parseInfixExpression);
     this.registerInfix(token.MINUS, this.parseInfixExpression);
     this.registerInfix(token.SLASH, this.parseInfixExpression);

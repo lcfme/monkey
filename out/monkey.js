@@ -145,6 +145,15 @@ var Program = exports.Program = function () {
         return '';
       }
     }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      var str = '';
+      for (var i = 0; i < this.statements.length; i++) {
+        str += this.statements[i].toString();
+      }
+      return str;
+    }
   }]);
 
   return Program;
@@ -162,6 +171,16 @@ var LetStatement = exports.LetStatement = function () {
     key: 'tokenLiterial',
     value: function tokenLiterial() {
       return this.token.Literial;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      var str = this.tokenLiterial() + ' ' + this.name.toString() + ' = ';
+      if (this.value) {
+        str += this.value.toString() + ' ';
+      }
+      str += ';';
+      return str;
     }
   }]);
 
@@ -184,9 +203,137 @@ var Identifier = exports.Identifier = function () {
     value: function tokenLiterial() {
       return this.token.Literial;
     }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return this.value;
+    }
   }]);
 
   return Identifier;
+}();
+
+var ReturnStatement = exports.ReturnStatement = function () {
+  function ReturnStatement() {
+    _classCallCheck(this, ReturnStatement);
+  }
+
+  _createClass(ReturnStatement, [{
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }, {
+    key: 'statementNode',
+    value: function statementNode() {}
+  }, {
+    key: 'toString',
+    value: function toString() {
+      var str = this.tokenLiterial();
+      if (this.returnValue) {
+        str += this.returnValue.toString();
+      }
+      str += ';';
+      return str;
+    }
+  }]);
+
+  return ReturnStatement;
+}();
+
+var ExpressionStatement = exports.ExpressionStatement = function () {
+  function ExpressionStatement() {
+    _classCallCheck(this, ExpressionStatement);
+  }
+
+  _createClass(ExpressionStatement, [{
+    key: 'statementNode',
+    value: function statementNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      if (this.expression) {
+        return this.expression.toString();
+      }
+      return '';
+    }
+  }]);
+
+  return ExpressionStatement;
+}();
+
+var IntegerLiteral = exports.IntegerLiteral = function () {
+  function IntegerLiteral() {
+    _classCallCheck(this, IntegerLiteral);
+  }
+
+  _createClass(IntegerLiteral, [{
+    key: 'expressionNode',
+    value: function expressionNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return this.token.Literial;
+    }
+  }]);
+
+  return IntegerLiteral;
+}();
+
+var PrefixExpression = exports.PrefixExpression = function () {
+  function PrefixExpression() {
+    _classCallCheck(this, PrefixExpression);
+  }
+
+  _createClass(PrefixExpression, [{
+    key: 'expressionNode',
+    value: function expressionNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return '(' + this.operator + this.right.toString() + ')';
+    }
+  }]);
+
+  return PrefixExpression;
+}();
+
+var InfixExpression = exports.InfixExpression = function () {
+  function InfixExpression() {
+    _classCallCheck(this, InfixExpression);
+  }
+
+  _createClass(InfixExpression, [{
+    key: 'expressionNode',
+    value: function expressionNode() {}
+  }, {
+    key: 'tokenLiterial',
+    value: function tokenLiterial() {
+      return this.token.Literial;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return '(' + this.left.toString() + ' ' + this.operator + ' ' + this.right.toString() + ')';
+    }
+  }]);
+
+  return InfixExpression;
 }();
 
 /***/ }),
@@ -438,6 +585,8 @@ exports.Parser = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _precedence;
+
 var _lexer = __webpack_require__(/*! ./lexer */ "./src/lexer.js");
 
 var lexer = _interopRequireWildcard(_lexer);
@@ -454,12 +603,37 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var LOWEST = 1;
+var EQUALS = 2;
+var LESSGREATER = 3;
+var SUM = 4;
+var PRODUCT = 5;
+var PREFIX = 6;
+var CALL = 7;
+
+var precedence = (_precedence = {}, _defineProperty(_precedence, token.EQ, EQUALS), _defineProperty(_precedence, token.NOT_EQ, EQUALS), _defineProperty(_precedence, token.LT, LESSGREATER), _defineProperty(_precedence, token.GT, LESSGREATER), _defineProperty(_precedence, token.PLUS, SUM), _defineProperty(_precedence, token.MINUS, SUM), _defineProperty(_precedence, token.SLASH, PRODUCT), _defineProperty(_precedence, token.ASTERISK, PRODUCT), _precedence);
+
 var Parser = exports.Parser = function () {
   function Parser(l) {
     _classCallCheck(this, Parser);
 
     this.errors = [];
+    this.prefixParseFns = {};
+    this.infixParseFns = {};
     this.l = l;
+    this.registerPrefix(token.IDENT, this.parseIdentifier);
+    this.registerPrefix(token.INT, this.parseIntegerLiteral);
+    this.registerPrefix(token.BANG, this.parsePrefixExpression);
+    this.registerInfix(token.PLUS, this.parseInfixExpression);
+    this.registerInfix(token.MINUS, this.parseInfixExpression);
+    this.registerInfix(token.SLASH, this.parseInfixExpression);
+    this.registerInfix(token.ASTERISK, this.parseInfixExpression);
+    this.registerInfix(token.EQ, this.parseInfixExpression);
+    this.registerInfix(token.NOT_EQ, this.parseInfixExpression);
+    this.registerInfix(token.LT, this.parseInfixExpression);
+    this.registerInfix(token.GT, this.parseInfixExpression);
     this.nextToken();
     this.nextToken();
   }
@@ -471,10 +645,52 @@ var Parser = exports.Parser = function () {
       this.peekToken = this.l.nextToken();
     }
   }, {
+    key: 'noPrefixParseFnError',
+    value: function noPrefixParseFnError(t) {
+      this.errors.push('no parse function for token ' + t);
+    }
+  }, {
+    key: 'registerPrefix',
+    value: function registerPrefix(tokenType, fn) {
+      this.prefixParseFns[tokenType] = fn;
+    }
+  }, {
+    key: 'registerInfix',
+    value: function registerInfix(tokenType, fn) {
+      this.infixParseFns[tokenType] = fn;
+    }
+  }, {
+    key: 'parsePrefixExpression',
+    value: function parsePrefixExpression() {
+      var expression = new ast.PrefixExpression();
+      expression.token = this.curToken;
+      expression.operator = this.curToken.Literial;
+      this.nextToken();
+      expression.right = this.parseExpression(PREFIX);
+      return expression;
+    }
+  }, {
+    key: 'peekPrecedence',
+    value: function peekPrecedence() {
+      var p = precedence[this.peekToken.Type];
+      if (p !== undefined) {
+        return p;
+      }
+      return LOWEST;
+    }
+  }, {
+    key: 'curPrecedence',
+    value: function curPrecedence() {
+      var p = precedence[this.curToken.Type];
+      if (p !== undefined) {
+        return p;
+      }
+      return LOWEST;
+    }
+  }, {
     key: 'parseProgram',
     value: function parseProgram() {
       var program = new ast.Program();
-      debugger;
       while (this.curToken.Type !== token.EOF) {
         var stmt = this.parseStatememt();
         if (stmt) {
@@ -485,13 +701,20 @@ var Parser = exports.Parser = function () {
       return program;
     }
   }, {
+    key: 'parseIdentifier',
+    value: function parseIdentifier() {
+      return new ast.Identifier(this.curToken, this.curToken.Literial);
+    }
+  }, {
     key: 'parseStatememt',
     value: function parseStatememt() {
       switch (this.curToken.Type) {
         case token.LET:
           return this.parseLetStatement();
+        case token.RETURN:
+          return this.parseReturnStatement();
         default:
-          return null;
+          return this.parseExpressionStatement();
       }
     }
   }, {
@@ -507,10 +730,23 @@ var Parser = exports.Parser = function () {
         return;
       }
       // @TODO
-      debugger;
       while (this.curToken.Type !== token.EOF && !this.curTokenIs(token.SEMICOLON)) {
         this.nextToken();
       }
+      return stmt;
+    }
+  }, {
+    key: 'parseReturnStatement',
+    value: function parseReturnStatement() {
+      var stmt = new ast.ReturnStatement();
+      stmt.token = this.curToken;
+      this.nextToken();
+
+      // @TODO
+      while (this.curToken.Type !== token.EOF && !this.curTokenIs(token.SEMICOLON)) {
+        this.nextToken();
+      }
+
       return stmt;
     }
   }, {
@@ -539,6 +775,54 @@ var Parser = exports.Parser = function () {
     value: function curTokenIs(t) {
       return this.curToken.Type === t;
     }
+  }, {
+    key: 'parseExpressionStatement',
+    value: function parseExpressionStatement() {
+      var stmt = new ast.ExpressionStatement();
+      stmt.token = this.curToken;
+      stmt.expression = this.parseExpression(LOWEST);
+      return stmt;
+    }
+  }, {
+    key: 'parseExpression',
+    value: function parseExpression(precedence) {
+      var prefix = this.prefixParseFns[this.curToken.Type];
+      if (!prefix) {
+        this.noPrefixParseFnError(this.curToken.Type);
+        return null;
+      }
+      var leftExp = prefix();
+      while (this.curToken.Type !== token.EOF && !this.curTokenIs(token.SEMICOLON) && precedence < this.peekPrecedence()) {
+        var infix = this.infixParseFns[this.peekToken.Type];
+        if (!infix) {
+          return leftExp;
+        }
+        this.nextToken();
+        leftExp = infix(leftExp);
+      }
+      return leftExp;
+    }
+  }, {
+    key: 'parseIntegerLiteral',
+    value: function parseIntegerLiteral() {
+      var lit = new ast.IntegerLiteral();
+      lit.token = this.curToken;
+      lit.value = Number(this.curToken.Literial);
+      return lit;
+    }
+  }, {
+    key: 'parseInfixExpression',
+    value: function parseInfixExpression(left) {
+      var expression = new ast.InfixExpression();
+      expression.token = this.curToken;
+      expression.operator = this.curToken.Literial;
+      expression.left = left;
+
+      var precedence = this.curPrecedence();
+      this.nextToken();
+      expression.right = this.parseExpression(precedence);
+      return expression;
+    }
   }]);
 
   return Parser;
@@ -561,7 +845,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.generateToken = generateToken;
 exports.lookupIdent = lookupIdent;
-function generateToken(tokenType, literial) {
+function generateToken(tokenType) {
+  var literial = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
   return {
     Type: tokenType,
     Literial: literial
