@@ -100,3 +100,50 @@ export class ExpressionStatement implements Statement {
     return '';
   }
 }
+
+export class IntegerLiteral implements Expression {
+  token: Token;
+  value: number;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    return this.token.Literial;
+  }
+}
+
+export class PrefixExpression implements Expression {
+  token: Token;
+  operator: string;
+  right: Expression;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    return '(' + this.operator + this.right.toString() + ')';
+  }
+}
+
+export class InfixExpression implements Expression {
+  token: Token;
+  left: Expression;
+  operator: string;
+  right: Expression;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    return (
+      '(' +
+      this.left.toString() +
+      ' ' +
+      this.operator +
+      ' ' +
+      this.right.toString() +
+      ')'
+    );
+  }
+}

@@ -12,6 +12,17 @@ const PRODUCT = 5;
 const PREFIX = 6;
 const CALL = 7;
 
+const precedence: { [k: any]: number } = {
+  [token.EQ]: EQUALS,
+  [token.NOT_EQ]: EQUALS,
+  [token.LT]: LESSGREATER,
+  [token.GT]: LESSGREATER,
+  [token.PLUS]: SUM,
+  [token.MINUS]: SUM,
+  [token.SLASH]: PRODUCT,
+  [token.ASTERISK]: PRODUCT
+};
+
 type prefixParseFn = () => ast.Expression;
 type infixParseFn = ast.Expression => ast.Expression;
 
@@ -24,8 +35,21 @@ export class Parser {
   infixParseFns: { [k: token.TokenType]: infixParseFn };
   constructor(l: lexer.Lexer) {
     this.errors = [];
+    this.prefixParseFns = {};
+    this.infixParseFns = {};
     this.l = l;
     this.registerPrefix(token.IDENT, this.parseIdentifier);
+    this.registerPrefix(token.INT, this.parseIntegerLiteral);
+    this.registerPrefix(token.BANG, this.parsePrefixExpression);
+    this.registerPrefix(token.MINUS, this.parsePrefixExpression);
+    this.registerInfix(token.PLUS, this.parseInfixExpression);
+    this.registerInfix(token.MINUS, this.parseInfixExpression);
+    this.registerInfix(token.SLASH, this.parseInfixExpression);
+    this.registerInfix(token.ASTERISK, this.parseInfixExpression);
+    this.registerInfix(token.EQ, this.parseInfixExpression);
+    this.registerInfix(token.NOT_EQ, this.parseInfixExpression);
+    this.registerInfix(token.LT, this.parseInfixExpression);
+    this.registerInfix(token.GT, this.parseInfixExpression);
     this.nextToken();
     this.nextToken();
   }
@@ -33,11 +57,38 @@ export class Parser {
     this.curToken = this.peekToken;
     this.peekToken = this.l.nextToken();
   }
+  noPrefixParseFnError(t: token.TokenType) {
+    this.errors.push('no parse function for token ' + t);
+  }
   registerPrefix(tokenType: token.TokenType, fn: prefixParseFn) {
     this.prefixParseFns[tokenType] = fn;
   }
   registerInfix(tokenType: token.TokenType, fn: infixParseFn) {
     this.infixParseFns[tokenType] = fn;
+  }
+  parsePrefixExpression(): ast.Expression {
+    const expression = new ast.PrefixExpression();
+    expression.token = this.curToken;
+    expression.operator = this.curToken.Literial;
+    this.nextToken();
+    expression.right = ((this.parseExpression(
+      PREFIX
+    ): any): ast.PrefixExpression);
+    return expression;
+  }
+  peekPrecedence(): number {
+    const p = precedence[this.peekToken.Type];
+    if (p !== undefined) {
+      return p;
+    }
+    return LOWEST;
+  }
+  curPrecedence(): number {
+    const p = precedence[this.curToken.Type];
+    if (p !== undefined) {
+      return p;
+    }
+    return LOWEST;
   }
   parseProgram(): ast.Program {
     const program = new ast.Program();
@@ -128,9 +179,41 @@ export class Parser {
   parseExpression(precedence: number): ?ast.Expression {
     const prefix = this.prefixParseFns[this.curToken.Type];
     if (!prefix) {
+      this.noPrefixParseFnError(this.curToken.Type);
       return null;
     }
-    const leftExp = prefix();
+    let leftExp = prefix();
+    while (
+      this.curToken.Type !== token.EOF &&
+      !this.curTokenIs(token.SEMICOLON) &&
+      precedence < this.peekPrecedence()
+    ) {
+      const infix = this.infixParseFns[this.peekToken.Type];
+      if (!infix) {
+        return leftExp;
+      }
+      this.nextToken();
+      leftExp = infix(leftExp);
+    }
     return leftExp;
+  }
+  parseIntegerLiteral(): ast.Expression {
+    const lit = new ast.IntegerLiteral();
+    lit.token = this.curToken;
+    lit.value = Number(this.curToken.Literial);
+    return lit;
+  }
+  parseInfixExpression(left: ast.Expression): ast.Expression {
+    const expression = new ast.InfixExpression();
+    expression.token = this.curToken;
+    expression.operator = this.curToken.Literial;
+    expression.left = left;
+
+    const precedence = this.curPrecedence();
+    this.nextToken();
+    expression.right = ((this.parseExpression(
+      precedence
+    ): any): ast.Expression);
+    return expression;
   }
 }
