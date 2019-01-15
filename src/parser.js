@@ -66,6 +66,7 @@ export class Parser {
       token.FUNC,
       ((this.parseFunctionLiteral: any): prefixParseFn)
     );
+    this.registerInfix(token.LPAREN, this.parseCallExpression);
     this.nextToken();
     this.nextToken();
   }
