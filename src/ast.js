@@ -147,3 +147,86 @@ export class InfixExpression implements Expression {
     );
   }
 }
+
+export class Bool implements Expression {
+  token: Token;
+  value: boolean;
+
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    return this.token.Literial;
+  }
+}
+
+export class IfExpression implements Expression {
+  token: Token;
+  condition: Expression;
+  consequence: BlockStatement;
+  alternative: ?BlockStatement;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    let str =
+      'if ' + this.condition.toString() + ' ' + this.consequence.toString();
+    if (this.alternative) {
+      str += ' else ' + this.alternative.toString();
+    }
+    return str;
+  }
+}
+
+export class BlockStatement implements Statement {
+  token: Token;
+  statements: Array<Statement>;
+  constructor() {
+    this.statements = [];
+  }
+  statementNode() {}
+  tokenLiterial() {
+    return this.token.Literial;
+  }
+  toString() {
+    return this.statements.map(i => i.toString()).join('');
+  }
+}
+
+export class FunctionLiteral implements Expression {
+  token: Token;
+  parameters: Array<Identifier>;
+  body: BlockStatement;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    let str = this.tokenLiterial();
+    str += ' (';
+    str += this.parameters.map(i => i.toString()).join(',');
+    str += ')';
+    str += this.body.toString();
+    return str;
+  }
+}
+
+export class CallExpression implements Expression {
+  token: Token;
+  function: Expression;
+  arguments: Array<Expression>;
+  expressionNode() {}
+  tokenLiterial(): string {
+    return this.token.Literial;
+  }
+  toString(): string {
+    return (
+      this.tokenLiterial() +
+      '(' +
+      this.arguments.map(i => i.toString()).join(',') +
+      ')'
+    );
+  }
+}

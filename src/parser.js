@@ -20,7 +20,8 @@ const precedence: { [k: any]: number } = {
   [token.PLUS]: SUM,
   [token.MINUS]: SUM,
   [token.SLASH]: PRODUCT,
-  [token.ASTERISK]: PRODUCT
+  [token.ASTERISK]: PRODUCT,
+  [token.LPAREN]: CALL
 };
 
 type prefixParseFn = () => ast.Expression;
@@ -41,6 +42,8 @@ export class Parser {
     this.registerPrefix(token.IDENT, this.parseIdentifier);
     this.registerPrefix(token.INT, this.parseIntegerLiteral);
     this.registerPrefix(token.BANG, this.parsePrefixExpression);
+    this.registerPrefix(token.MINUS, this.parsePrefixExpression);
+    this.registerPrefix(token.PLUS, this.parsePrefixExpression);
     this.registerInfix(token.PLUS, this.parseInfixExpression);
     this.registerInfix(token.MINUS, this.parseInfixExpression);
     this.registerInfix(token.SLASH, this.parseInfixExpression);
@@ -49,6 +52,20 @@ export class Parser {
     this.registerInfix(token.NOT_EQ, this.parseInfixExpression);
     this.registerInfix(token.LT, this.parseInfixExpression);
     this.registerInfix(token.GT, this.parseInfixExpression);
+    this.registerPrefix(token.TRUE, this.parseBoolean);
+    this.registerPrefix(token.FALSE, this.parseBoolean);
+    this.registerPrefix(
+      token.LPAREN,
+      ((this.parseGroupedExpression: any): prefixParseFn)
+    );
+    this.registerPrefix(
+      token.IF,
+      ((this.parseIfExpression: any): prefixParseFn)
+    );
+    this.registerPrefix(
+      token.FUNC,
+      ((this.parseFunctionLiteral: any): prefixParseFn)
+    );
     this.nextToken();
     this.nextToken();
   }
@@ -123,7 +140,15 @@ export class Parser {
     if (!this.expectPeek(token.ASSIGN)) {
       return;
     }
-    // @TODO
+
+    if (!this.expectPeek(token.ASSIGN)) {
+      return null;
+    }
+
+    this.nextToken();
+
+    stmt.value = ((this.parseExpression(LOWEST): any): ast.Expression);
+
     while (
       this.curToken.Type !== token.EOF &&
       !this.curTokenIs(token.SEMICOLON)
@@ -137,7 +162,8 @@ export class Parser {
     stmt.token = this.curToken;
     this.nextToken();
 
-    // @TODO
+    stmt.returnValue = ((this.parseExpression(LOWEST): any): ast.Expression);
+
     while (
       this.curToken.Type !== token.EOF &&
       !this.curTokenIs(token.SEMICOLON)
@@ -214,5 +240,116 @@ export class Parser {
       precedence
     ): any): ast.Expression);
     return expression;
+  }
+  parseBoolean(): ast.Expression {
+    const expression = new ast.Bool();
+    expression.token = this.curToken;
+    expression.value = this.curToken.Literial === 'false' ? false : true;
+    return expression;
+  }
+  parseGroupedExpression(): ?ast.Expression {
+    this.nextToken();
+    const exp = this.parseExpression(LOWEST);
+    if (!this.expectPeek(token.RPAREN)) {
+      return null;
+    }
+    return exp;
+  }
+  parseIfExpression(): ?ast.Expression {
+    const expression = new ast.IfExpression();
+    expression.token = this.curToken;
+    if (!this.expectPeek(token.LPAREN)) {
+      return null;
+    }
+    this.nextToken();
+    expression.condition = ((this.parseExpression(
+      LOWEST
+    ): any): ast.Expression);
+    if (!this.expectPeek(token.RPAREN)) {
+      return null;
+    }
+    if (!this.expectPeek(token.LBRACE)) {
+      return null;
+    }
+    expression.consequence = this.parseBlockStatement();
+    if (this.peekTokenIs(token.ELSE)) {
+      this.nextToken();
+      if (!this.expectPeek(token.LBRACE)) {
+        return null;
+      }
+      expression.alternative = this.parseBlockStatement();
+    }
+    return expression;
+  }
+  parseBlockStatement(): ast.BlockStatement {
+    const block = new ast.BlockStatement();
+    block.token = this.curToken;
+    this.nextToken();
+    while (this.curToken.Type !== token.EOF && !this.curTokenIs(token.RBRACE)) {
+      const stmt = this.parseStatememt();
+      if (stmt) {
+        block.statements.push(stmt);
+      }
+      this.nextToken();
+    }
+    return block;
+  }
+  parseFunctionLiteral(): ?ast.Expression {
+    const lit = new ast.FunctionLiteral();
+    lit.token = this.curToken;
+    if (!this.expectPeek(token.LPAREN)) {
+      return null;
+    }
+    lit.parameters = ((this.parseFunctionParameters(): any): Array<ast.Identifier>);
+    if (!this.expectPeek(token.LBRACE)) {
+      return null;
+    }
+    lit.body = this.parseBlockStatement();
+    return lit;
+  }
+  parseFunctionParameters(): ?Array<ast.Identifier> {
+    const identifiers = [];
+    if (this.peekTokenIs(token.RPAREN)) {
+      this.nextToken();
+      return identifiers;
+    }
+    this.nextToken();
+    const ident = new ast.Identifier(this.curToken, this.curToken.Literial);
+    identifiers.push(ident);
+    while (this.peekTokenIs(token.COMMA)) {
+      this.nextToken();
+      this.nextToken();
+      const ident = new ast.Identifier(this.curToken, this.curToken.Literial);
+      identifiers.push(ident);
+    }
+    if (!this.expectPeek(token.RPAREN)) {
+      return null;
+    }
+    return identifiers;
+  }
+  parseCallExpression(func: ast.Expression): ast.Expression {
+    const exp = new ast.CallExpression();
+    exp.token = this.curToken;
+    exp.function = func;
+    exp.arguments = ((this.parseCallArguments(): any): Array<ast.Expression>);
+    return exp;
+  }
+  parseCallArguments(): ?Array<ast.Expression> {
+    const args = [];
+    while (this.peekTokenIs(token.RPAREN)) {
+      this.nextToken();
+      return args;
+    }
+    this.nextToken();
+    args.push(((this.parseExpression(LOWEST): any): ast.Expression));
+    while (this.peekTokenIs(token.COMMA)) {
+      this.nextToken();
+      this.nextToken();
+      args.push(((this.parseExpression(LOWEST): any): ast.Expression));
+    }
+    if (!this.expectPeek(token.RPAREN)) {
+      return null;
+    }
+    return args;
   }
 }
